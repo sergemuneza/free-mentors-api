@@ -13,7 +13,4 @@ router.get('/sessions', verifyToken, isAdmin, viewAllSessions);
 // Delete a review (Admin only)
 router.delete('/sessions/:sessionId/review', verifyToken, isAdmin, deleteReview);
 
-// // Admin views all mentorship sessions
-// router.get("/sessions", verifyToken, isAdmin, getAllSessions);
-
 module.exports = router;
