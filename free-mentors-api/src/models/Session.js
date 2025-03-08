@@ -1,3 +1,7 @@
+/*
+SERGE MUNEZA
+*/
+
 const mongoose = require("mongoose");
 
 const SessionSchema = new mongoose.Schema(
@@ -20,6 +24,10 @@ const SessionSchema = new mongoose.Schema(
       type: String,
       enum: ["pending", "accepted", "rejected"],
       default: "pending",
+    },
+    review: {
+      score: { type: Number, min: 1, max: 5 }, // Rating between 1 and 5
+      remark: { type: String },
     },
   },
   { timestamps: true }

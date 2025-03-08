@@ -1,3 +1,7 @@
+/*
+SERGE MUNEZA
+*/
+
 const User = require('../models/User');
 
 exports.promoteToMentor = async (req, res) => {
@@ -53,15 +57,29 @@ exports.viewAllSessions = async (req, res) => {
 };
 
 
-const Review = require('../models/Review');
+// Admin can delete a mentorship session review
+exports.deleteSessionReview = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
 
-exports.deleteReview = async (req, res) => {
-    try {
-        const review = await Review.findByIdAndDelete(req.params.sessionId);
-        if (!review) return res.status(404).json({ error: 'Review not found' });
+    // Find the session
+    const session = await Session.findById(sessionId);
 
-        res.status(200).json({ message: 'Review successfully deleted' });
-    } catch (error) {
-        res.status(500).json({ error: 'Server error' });
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
     }
+
+    // Check if review field exists (Ensure your schema includes "review")
+    if (!session.review) {
+      return res.status(404).json({ error: "No review found for this session" });
+    }
+
+    // Remove the review
+    session.review = undefined;
+    await session.save();
+
+    res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
 };

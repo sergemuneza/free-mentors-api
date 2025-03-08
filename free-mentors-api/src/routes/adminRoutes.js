@@ -1,5 +1,9 @@
+/*
+SERGE MUNEZA
+*/
+
 const express = require('express');
-const { promoteToMentor, viewAllSessions, deleteReview} = require('../controllers/adminController');
+const { promoteToMentor, viewAllSessions, deleteSessionReview} = require('../controllers/adminController');
 const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -11,6 +15,6 @@ router.patch('/user/:userId', verifyToken, isAdmin, promoteToMentor);
 router.get('/sessions', verifyToken, isAdmin, viewAllSessions);
 
 // Delete a review (Admin only)
-router.delete('/sessions/:sessionId/review', verifyToken, isAdmin, deleteReview);
+router.delete('/sessions/:sessionId/review', verifyToken, isAdmin, deleteSessionReview);
 
 module.exports = router;

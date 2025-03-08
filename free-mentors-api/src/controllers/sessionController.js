@@ -1,48 +1,6 @@
-// const Session = require("../models/Session");
-// const User = require("../models/User");
-// const mongoose = require("mongoose");
-
-// // Create a mentorship session request
-// exports.createSession = async (req, res) => {
-//     try {
-//         const { mentorId, questions } = req.body;
-//         const menteeId = req.user.id; // Get user ID from token
-
-//         // Validate ObjectId
-//         if (!mongoose.Types.ObjectId.isValid(mentorId)) {
-//             return res.status(400).json({ message: "Invalid mentor ID format" });
-//         }
-
-//         // Check if mentor exists and has the "mentor" role
-//         const mentor = await User.findOne({ _id: mentorId, role: "mentor" });
-//         if (!mentor) {
-//             return res.status(404).json({ message: "Mentor not found" });
-//         }
-
-//         // Prevent users from requesting a session with themselves
-//         if (menteeId === mentorId) {
-//             return res.status(400).json({ message: "You cannot request a session with yourself" });
-//         }
-
-//         // Create session request
-//         const newSession = new Session({
-//             mentorId,
-//             menteeId,
-//             questions,
-//         });
-
-//         await newSession.save();
-
-//         res.status(201).json({
-//             status: 201,
-//             message: "Mentorship session request created successfully",
-//             data: newSession,
-//         });
-//     } catch (error) {
-//         console.error("Error creating session:", error);
-//         res.status(500).json({ message: "Internal server error" });
-//     }
-// };
+/*
+SERGE MUNEZA
+*/
 
 const Session = require("../models/Session");
 const User = require("../models/User");
@@ -209,6 +167,57 @@ exports.getMenteeSessions = async (req, res) => {
         });
     } catch (error) {
         console.error("Error fetching mentee sessions:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Review a mentorship session
+exports.reviewSession = async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const { score, remark } = req.body;
+        const menteeId = req.user.id; // Extract mentee ID from token
+
+        // Validate input
+        if (!score || !remark) {
+            return res.status(400).json({ message: "Score and remark are required" });
+        }
+        if (score < 1 || score > 5) {
+            return res.status(400).json({ message: "Score must be between 1 and 5" });
+        }
+
+        // Find the session and ensure the mentee is the owner
+        const session = await Session.findById(sessionId);
+        if (!session) {
+            return res.status(404).json({ message: "Session not found" });
+        }
+        if (session.menteeId.toString() !== menteeId) {
+            return res.status(403).json({ message: "You can only review your own sessions" });
+        }
+
+        // Update session with review details
+        session.score = score;
+        session.remark = remark;
+        await session.save();
+
+        // Fetch mentee details
+        const mentee = await User.findById(menteeId).select("firstName lastName");
+        const menteeFullName = `${mentee.firstName} ${mentee.lastName}`;
+
+        // Response
+        res.status(200).json({
+            status: 200,
+            data: {
+                sessionId: session._id,
+                mentorId: session.mentorId,
+                menteeId: session.menteeId,
+                score,
+                menteeFullName,
+                remark
+            }
+        });
+    } catch (error) {
+        console.error("Error reviewing session:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 };
