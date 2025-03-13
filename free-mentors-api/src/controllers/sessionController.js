@@ -5,42 +5,39 @@ SERGE MUNEZA
 const Session = require("../models/Session");
 const User = require("../models/User");
 const mongoose = require("mongoose");
-
-// Create a mentorship session request
 exports.createSession = async (req, res) => {
     try {
         const { mentorId, questions } = req.body;
-        const menteeId = req.user.id; // Get user ID from token
+        const menteeId = req.user?.id; // Ensure menteeId is extracted properly
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(mentorId)) {
-            return res.status(400).json({ message: "Invalid mentor ID format" });
+        if (!menteeId) {
+            return res.status(401).json({ message: "Unauthorized. Please log in." });
         }
 
-        // Check if mentor exists and has the "mentor" role
+        // Ensure menteeId and mentorId are valid MongoDB ObjectIds
+        if (!mongoose.Types.ObjectId.isValid(menteeId) || !mongoose.Types.ObjectId.isValid(mentorId)) {
+            return res.status(400).json({ message: "Invalid mentor or mentee ID format" });
+        }
+
+        // Check if mentee exists
+        const mentee = await User.findById(menteeId);
+        if (!mentee) {
+            return res.status(404).json({ message: "Mentee not found" });
+        }
+
+        // Check if mentor exists and is a "mentor"
         const mentor = await User.findOne({ _id: mentorId, role: "mentor" });
         if (!mentor) {
             return res.status(404).json({ message: "Mentor not found" });
         }
 
         // Prevent users from requesting a session with themselves
-        if (menteeId === mentorId) {
+        if (menteeId.toString() === mentorId.toString()) {
             return res.status(400).json({ message: "You cannot request a session with yourself" });
         }
 
-        // Get mentee's email
-        const mentee = await User.findById(menteeId);
-        if (!mentee) {
-            return res.status(404).json({ message: "Mentee not found" });
-        }
-
         // Create session request
-        const newSession = new Session({
-            mentorId,
-            menteeId,
-            questions,
-        });
-
+        const newSession = new Session({ mentorId, menteeId, questions, status: "pending" });
         await newSession.save();
 
         res.status(201).json({
@@ -61,6 +58,7 @@ exports.createSession = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 // Accept a mentorship session request
 exports.acceptSession = async (req, res) => {

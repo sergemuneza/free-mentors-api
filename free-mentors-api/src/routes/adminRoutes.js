@@ -9,7 +9,8 @@ const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Promote user to mentor (Admin only)
-router.patch('/user/:userId', verifyToken, isAdmin, promoteToMentor);
+router.patch("/users/:userId/promote", verifyToken, isAdmin, promoteToMentor);
+
 
 // View all mentorship sessions (Admin only)
 router.get('/sessions', verifyToken, isAdmin, viewAllSessions);

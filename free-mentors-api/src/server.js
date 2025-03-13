@@ -18,9 +18,9 @@ app.use(cors());
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_DB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB Connected..."))
-  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
+  .connect(process.env.MONGO_DB_URI)
+  .then(() => console.log("MongoDB Connected..."))
+  .catch((err) => console.error("MongoDB Connection Error:", err));
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");
@@ -36,8 +36,13 @@ app.use("/api/v1/admin", adminRoutes);
 
 // Default Route
 app.get("/", (req, res) => {
-  res.send("✅ Free Mentors API is running...");
-}); 
+  res.send("Free Mentors API is running...");
+});
 
-// Start Server
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Start Server (only if not in test environment)
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+// Export app for testing
+module.exports = app;
